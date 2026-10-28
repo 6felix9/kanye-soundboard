@@ -199,6 +199,7 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 26px; border-radius: 
   body { padding: 8px; }
   .console { grid-template-columns: minmax(0, 1fr); height: auto; max-height: none; gap: 12px; padding: 18px 14px; }
   .pads { grid-template-columns: repeat(3, 1fr); grid-template-rows: none; grid-auto-rows: 88px; gap: 8px; }
+  .pad .key { display: none; }
   /* phone: header, then pads, then the deck controls */
   .side { display: contents; }
   .brand { order: -1; }
