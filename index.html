@@ -73,29 +73,6 @@
     </div>
   </div>
 </main>
-<div id="trim" class="modal" hidden>
-  <div class="mbox">
-    <div class="mhead"><b id="trimTitle">TRIM</b><button id="trimClose" class="tbtn small">&#10005; CLOSE</button></div>
-    <div class="mrow">
-      <label class="mlab">SOURCE <select id="trimSrc"></select></label>
-      <label class="mlab">ZOOM <select id="trimZoom"><option value="3">3s</option><option value="6" selected>6s</option><option value="12">12s</option><option value="30">30s</option></select></label>
-      <span id="trimStatus" class="mhint"></span>
-    </div>
-    <canvas id="wave" width="760" height="150"></canvas>
-    <input id="trimView" type="range" min="0" max="1000" value="0" style="width:100%">
-    <div class="mrow">
-      <div class="nudge"><span>START</span><button data-t="start" data-d="-0.05">&minus;</button><input id="trimStart" type="number" step="0.01" min="0"><button data-t="start" data-d="0.05">+</button></div>
-      <div class="nudge"><span>END</span><button data-t="end" data-d="-0.05">&minus;</button><input id="trimEnd" type="number" step="0.01" min="0"><button data-t="end" data-d="0.05">+</button></div>
-    </div>
-    <div class="mrow">
-      <button id="trimPlay" class="tbtn play">&#9654; PLAY REGION</button>
-      <button id="trimStop" class="tbtn">&#9632; STOP</button>
-      <button id="trimReset" class="tbtn">&#8634; DEFAULT</button>
-      <button id="trimSave" class="tbtn" style="margin-left:auto">&#10003; SAVE TO PAD</button>
-    </div>
-    <p class="mhint">Click the waveform to set START &middot; Shift-click to set END &middot; red = selected region</p>
-  </div>
-</div>
 <script src="app.js"></script>
 </body>
 </html>

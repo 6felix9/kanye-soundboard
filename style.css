@@ -164,11 +164,6 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 26px; border-radius: 
     0 0 26px var(--glow);
   background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--glow) 55%, #fff 0%), var(--pad) 85%);
 }
-.pad.drag { outline: 2px dashed var(--gold); outline-offset: 3px; }
-
-.led { position: absolute; top: 10px; left: 10px; width: 9px; height: 9px; border-radius: 50%; background: #1a0304; border: 1px solid #000; }
-.pad.loaded .led { background: var(--glow); box-shadow: 0 0 8px var(--glow); }
-.pad.hit .led { background: #fff; box-shadow: 0 0 12px #fff; }
 
 .key {
   position: absolute; top: 8px; right: 10px; font: 700 clamp(11px, 1.3vw, 16px) "SF Mono", Menlo, monospace; color: var(--text);
@@ -177,17 +172,6 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 26px; border-radius: 
 
 .label { font-family: Impact, "Arial Narrow Bold", sans-serif; font-size: clamp(12px, 1.5vw, 20px); letter-spacing: 1.5px; color: var(--text); line-height: 1.05; text-shadow: 0 2px 0 #000; padding: 0 4px; }
 .pad.hit .label { color: #000; text-shadow: none; }
-.sub { margin-top: 4px; font-size: 8px; letter-spacing: 1px; color: var(--dim); text-transform: uppercase; }
-.pad.hit .sub { color: #222; }
-
-.tools { position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; opacity: 0; transition: opacity .15s; }
-.pad:hover .tools, .pad:focus-within .tools { opacity: 1; }
-.tools button {
-  width: 22px; height: 18px; font-size: 10px; line-height: 1; color: var(--text); cursor: pointer;
-  background: #0d0a0a; border: 1px solid #000; border-radius: 4px;
-}
-.tools button:hover { color: var(--gold); }
-
 
 /* credits */
 .credits { position: absolute; right: 28px; bottom: 3px; z-index: 5; }
@@ -224,18 +208,3 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 26px; border-radius: 
   .brand h1 span { font-size: 22px; letter-spacing: 5px; }
   .brand p { letter-spacing: 2px; }
 }
-@media (hover: none) { .tools { opacity: 1; } }
-
-/* trim modal */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
-.modal[hidden] { display: none; }
-.mbox { width: 100%; max-width: 800px; background: linear-gradient(180deg, #1a1314, #0c0909); border: 2px solid #000; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 30px 60px rgba(0,0,0,.8); }
-.mhead { display: flex; justify-content: space-between; align-items: center; font-family: Impact, sans-serif; letter-spacing: 2px; font-size: 20px; color: var(--red); }
-.mrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.mlab { font-size: 10px; letter-spacing: 2px; color: var(--dim); display: flex; gap: 6px; align-items: center; }
-.mlab select, .nudge input { background: #0a0203; color: var(--lcd); border: 1px solid #000; border-radius: 4px; padding: 6px; font: 600 13px "SF Mono", Menlo, monospace; }
-.nudge { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 2px; color: var(--dim); }
-.nudge input { width: 84px; text-align: center; }
-.nudge button { width: 30px; height: 30px; background: #261e1f; color: var(--text); border: 1px solid #000; border-radius: 4px; cursor: pointer; font-size: 16px; }
-.mhint { font-size: 11px; color: var(--dim); margin: 0; letter-spacing: .5px; }
-#wave { width: 100%; height: 150px; background: #080102; border: 2px solid #000; border-radius: 6px; cursor: crosshair; }

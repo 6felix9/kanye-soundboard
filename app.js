@@ -2,7 +2,7 @@
   'use strict';
 
   // ---------- pad definitions ----------
-  // f/type/dur: synth stab used until you load a real clip. say: robot-voice fallback.
+  // f/type/dur: synth stab used if a pad's clip fails to load. say: robot-voice fallback.
   const KEYS = '1234567890QWERTYUIOPASDFGHJKL;'.split('');
   const C = { red: '#ff2a2a', gold: '#e0b25a', ember: '#ff6a3d', rose: '#ff3d6e', cream: '#f1e4dc' };
   // [label, song, color, freq, wave, dur, robot-voice text]
@@ -17,7 +17,7 @@
     ['PIANO 7', 'Runaway', C.cream, 740, 'triangle', 1.6, ''],
     ['PIANO 8', 'Runaway', C.cream, 831, 'triangle', 1.6, ''],
     ['BEAT', 'Runaway', C.red, 80, 'square', 0.25, ''],
-    ['BEAUTIFUL STARS', 'Runaway', C.emberld, 880, 'sine', 1.4, ''],
+    ['BEAUTIFUL STARS', 'Runaway', C.gold, 880, 'sine', 1.4, ''],
     ['HEY!', 'Runaway', C.ember, 185, 'sawtooth', 0.2, 'hey'],
     ['LADIES & GENTS', 'Runaway', C.rose, 262, 'sawtooth', 0.4, 'ladies and gentlemen'],
     ['WORK IT', 'Stronger', C.red, 392, 'square', 0.25, 'work it'],
@@ -42,7 +42,7 @@
 
   const $ = (id) => document.getElementById(id);
 
-  // ---------- storage (IndexedDB for audio blobs, localStorage for names) ----------
+  // ---------- storage (IndexedDB for your loaded deck tracks) ----------
   const idb = {
     db: null,
     open() {
@@ -66,13 +66,7 @@
     },
     get: (k) => idb.tx('readonly', (s) => s.get(k)),
     put: (k, v) => idb.tx('readwrite', (s) => s.put(v, k)),
-    del: (k) => idb.tx('readwrite', (s) => s.delete(k)),
   };
-
-  const names = (() => {
-    try { return JSON.parse(localStorage.getItem('ks-names') || '{}'); } catch { return {}; }
-  })();
-  const saveNames = () => { try { localStorage.setItem('ks-names', JSON.stringify(names)); } catch {} };
 
   // ---------- audio graph ----------
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -105,31 +99,6 @@
   async function decode(blob) {
     const ab = await blob.arrayBuffer();
     return new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej));
-  }
-
-  function setLoaded(i, name) {
-    if (PADS[i].cancel) { els[i].sub.textContent = PADS[i].sub; return; }
-    const loaded = !!buffers[i];
-    els[i].pad.classList.toggle('loaded', loaded);
-    els[i].sub.textContent = loaded ? (name || 'CLIP') : PADS[i].sub + ' · synth';
-  }
-
-  async function loadPadFile(i, file) {
-    if (!file) return;
-    try {
-      const buf = await decode(file);
-      buffers[i] = buf;
-      await idb.put('pad-' + i, { blob: file, name: file.name });
-      setLoaded(i, file.name.replace(/\.[^.]+$/, ''));
-    } catch {
-      els[i].sub.textContent = 'BAD AUDIO FILE';
-    }
-  }
-
-  async function clearPad(i) {
-    buffers[i] = null;
-    await idb.del('pad-' + i);
-    setLoaded(i);
   }
 
   function synthHit(i, t0) {
@@ -199,54 +168,17 @@
       pad.className = 'pad';
       pad.tabIndex = 0;
       pad.style.setProperty('--glow', p.color);
-      pad.innerHTML =
-        '<i class="led"></i><span class="key">' + p.key + '</span>' +
-        '<div class="label"></div><div class="sub"></div>' +
-        '<div class="tools"><button class="ld" title="Load your own clip">⏏</button>' +
-        '<button class="tr" title="Trim from the full song">\u2702</button>' +
-        '<button class="cl" title="Clear clip">✕</button></div>' +
-        '<input type="file" accept="audio/*" hidden>';
-      const label = pad.querySelector('.label');
-      const sub = pad.querySelector('.sub');
-      const file = pad.querySelector('input');
-      label.textContent = names[i] || p.label;
-      els.push({ pad, label, sub });
+      pad.innerHTML = '<span class="key">' + p.key + '</span><div class="label"></div>';
+      pad.querySelector('.label').textContent = p.label;
+      els.push({ pad });
 
       pad.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.tools')) return;
         e.preventDefault();
         trigger(i);
       });
-      label.addEventListener('dblclick', () => {
-        const n = prompt('Rename pad', label.textContent);
-        if (n && n.trim()) { label.textContent = n.trim().toUpperCase(); names[i] = label.textContent; saveNames(); }
-      });
-      if (p.cancel) pad.querySelector('.tools').remove();
-      else {
-      pad.querySelector('.ld').addEventListener('click', () => file.click());
-      pad.querySelector('.cl').addEventListener('click', () => clearPad(i));
-      pad.querySelector('.tr').addEventListener('click', () => openTrim(i));
-      file.addEventListener('change', () => { loadPadFile(i, file.files[0]); file.value = ''; });
-      }
-
-      pad.addEventListener('dragover', (e) => { e.preventDefault(); pad.classList.add('drag'); });
-      pad.addEventListener('dragleave', () => pad.classList.remove('drag'));
-      pad.addEventListener('drop', (e) => {
-        e.preventDefault(); pad.classList.remove('drag');
-        if (!p.cancel) loadPadFile(i, e.dataTransfer.files[0]);
-      });
 
       grid.appendChild(pad);
-      setLoaded(i);
     });
-  }
-
-  async function restorePads() {
-    await Promise.all(PADS.map(async (_, i) => {
-      const rec = await idb.get('pad-' + i);
-      if (!rec) return;
-      try { buffers[i] = await decode(rec.blob); setLoaded(i, rec.name.replace(/\.[^.]+$/, '')); } catch {}
-    }));
   }
 
   // ---------- deck ----------
@@ -337,7 +269,7 @@
     e.target.value = '';
   });
 
-  // drop a track anywhere outside the pads
+  // drop a track anywhere to load it into the deck
   window.addEventListener('dragover', (e) => e.preventDefault());
   window.addEventListener('drop', async (e) => {
     e.preventDefault();
@@ -354,7 +286,7 @@
   const keyMap = Object.fromEntries(PADS.map((p, i) => [p.key.toLowerCase(), i]));
   window.addEventListener('keydown', (e) => {
     if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (!$('trim').hidden || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
     if (e.code === 'Space') { e.preventDefault(); togglePlay(); return; }
     const i = keyMap[e.key.toLowerCase()];
     if (i !== undefined) { e.preventDefault(); trigger(i); }
@@ -382,183 +314,15 @@
     requestAnimationFrame(draw);
   }
 
-  // ---------- trim tool: pick the exact region of a full song for a pad ----------
-  const SOURCES = {
-    Stronger: 'Kanye West - Stronger.mp3',
-    Runaway: 'Kanye West - Runaway (Video Version) ft. Pusha T.mp3',
-  };
-  const DEFAULTS = {
-    'LOOK AT CHA': ['Runaway', 11.10, 12.90],
-    'WORK IT': ['Stronger', 0.88, 1.47], 'MAKE IT': ['Stronger', 1.48, 2.06],
-    'DO IT': ['Stronger', 2.08, 2.62], 'MAKES US': ['Stronger', 2.64, 3.21],
-    'HARDER': ['Stronger', 3.23, 3.82], 'BETTER': ['Stronger', 3.83, 4.58],
-    'FASTER': ['Stronger', 4.66, 4.97], 'STRONGER': ['Stronger', 4.99, 5.50],
-  };
-  const srcBufs = {};
-  const T = { i: 0, src: 'Stronger', buf: null, start: 0, end: 1, view: 0, node: null };
-  const wave = $('wave'), wg = wave.getContext('2d');
-
-  function getSource(name) {
-    if (!srcBufs[name]) {
-      srcBufs[name] = fetch(encodeURI(SOURCES[name])).then((r) => {
-        if (!r.ok) throw new Error('missing');
-        return r.arrayBuffer();
-      }).then((ab) => new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej)));
-    }
-    return srcBufs[name];
-  }
-
-  const span = () => +$('trimZoom').value;
-  function drawWave() {
-    const W = wave.width, H = wave.height;
-    wg.clearRect(0, 0, W, H);
-    if (!T.buf) return;
-    const sr = T.buf.sampleRate, data = T.buf.getChannelData(0);
-    const t0 = T.view, t1 = t0 + span();
-    const x = (t) => ((t - t0) / span()) * W;
-    // selected region
-    wg.fillStyle = 'rgba(255,68,51,.18)';
-    wg.fillRect(x(T.start), 0, Math.max(1, x(T.end) - x(T.start)), H);
-    // peaks
-    wg.fillStyle = '#ff4433';
-    for (let px = 0; px < W; px++) {
-      const a = Math.floor((t0 + (px / W) * span()) * sr);
-      const b = Math.floor((t0 + ((px + 1) / W) * span()) * sr);
-      let mn = 0, mx = 0;
-      for (let k = a; k < b && k < data.length; k++) { const v = data[k]; if (v < mn) mn = v; if (v > mx) mx = v; }
-      wg.fillRect(px, H / 2 - mx * H / 2, 1, Math.max(1, (mx - mn) * H / 2));
-    }
-    // second ticks
-    wg.fillStyle = '#7a4a46';
-    wg.font = '10px monospace';
-    for (let s = Math.ceil(t0); s <= t1; s++) { wg.fillRect(x(s), 0, 1, 8); wg.fillText(s + 's', x(s) + 3, 18); }
-    // handles
-    wg.fillStyle = '#e0b25a'; wg.fillRect(x(T.start) - 1, 0, 3, H);
-    wg.fillStyle = '#f1e4dc'; wg.fillRect(x(T.end) - 1, 0, 3, H);
-  }
-
-  function syncInputs() {
-    $('trimStart').value = T.start.toFixed(2);
-    $('trimEnd').value = T.end.toFixed(2);
-    drawWave();
-  }
-  function setView(t) {
-    const max = Math.max(0, (T.buf ? T.buf.duration : 0) - span());
-    T.view = Math.min(max, Math.max(0, t));
-    $('trimView').value = max ? (T.view / max) * 1000 : 0;
-    drawWave();
-  }
-  function centerOn(t) { setView(t - span() / 2); }
-
-  async function loadTrimSource(name, region) {
-    T.src = name; T.buf = null; drawWave();
-    $('trimStatus').textContent = 'loading ' + name + '…';
-    try {
-      T.buf = await getSource(name);
-      $('trimStatus').textContent = fmt(T.buf.duration) + ' long';
-    } catch {
-      $('trimStatus').textContent = 'Could not load ' + SOURCES[name] + ' (run via start.command)';
-      return;
-    }
-    if (region) { T.start = region[0]; T.end = region[1]; }
-    T.end = Math.min(T.end, T.buf.duration);
-    syncInputs();
-    centerOn((T.start + T.end) / 2);
-  }
-
-  function openTrim(i) {
-    T.i = i;
-    $('trimTitle').textContent = 'TRIM — ' + els[i].label.textContent;
-    const d = DEFAULTS[PADS[i].label] || ['Stronger', 0, 1];
-    $('trimSrc').value = d[0];
-    $('trim').hidden = false;
-    loadTrimSource(d[0], [d[1], d[2]]);
-  }
-
-  function stopPreview() { if (T.node) { try { T.node.stop(); } catch {} T.node = null; } }
-  function playRegion() {
-    if (!T.buf) return;
-    resume(); stopPreview();
-    const s = ctx.createBufferSource();
-    s.buffer = T.buf; s.connect(padBus);
-    s.start(0, T.start, Math.max(0.02, T.end - T.start));
-    T.node = s;
-  }
-
-  function encodeWav(buf, s, e) {
-    const sr = buf.sampleRate, ch = Math.min(2, buf.numberOfChannels);
-    const a = Math.floor(s * sr), n = Math.max(1, Math.floor(e * sr) - a);
-    const out = new DataView(new ArrayBuffer(44 + n * ch * 2));
-    const w = (o, str) => [...str].forEach((c, k) => out.setUint8(o + k, c.charCodeAt(0)));
-    w(0, 'RIFF'); out.setUint32(4, 36 + n * ch * 2, true); w(8, 'WAVEfmt ');
-    out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, ch, true);
-    out.setUint32(24, sr, true); out.setUint32(28, sr * ch * 2, true); out.setUint16(32, ch * 2, true);
-    out.setUint16(34, 16, true); w(36, 'data'); out.setUint32(40, n * ch * 2, true);
-    const fade = Math.min(Math.floor(0.004 * sr), n >> 1), tail = Math.min(Math.floor(0.015 * sr), n >> 1);
-    for (let c = 0; c < ch; c++) {
-      const d = buf.getChannelData(c);
-      for (let k = 0; k < n; k++) {
-        let v = d[a + k] || 0;
-        if (k < fade) v *= k / fade;
-        if (k > n - tail) v *= (n - k) / tail;
-        out.setInt16(44 + (k * ch + c) * 2, Math.max(-1, Math.min(1, v)) * 32767, true);
-      }
-    }
-    return new Blob([out.buffer], { type: 'audio/wav' });
-  }
-
-  async function saveTrim() {
-    if (!T.buf || T.end <= T.start) return;
-    const file = new File([encodeWav(T.buf, T.start, T.end)], PADS[T.i].label.toLowerCase() + '.wav', { type: 'audio/wav' });
-    await loadPadFile(T.i, file);
-    stopPreview();
-    $('trim').hidden = true;
-  }
-
-  $('trimSrc').innerHTML = Object.keys(SOURCES).map((n) => '<option>' + n + '</option>').join('');
-  $('trimSrc').addEventListener('change', (e) => loadTrimSource(e.target.value, [0, 1]));
-  $('trimZoom').addEventListener('change', () => centerOn((T.start + T.end) / 2));
-  $('trimView').addEventListener('input', (e) => {
-    const max = Math.max(0, (T.buf ? T.buf.duration : 0) - span());
-    setView((e.target.value / 1000) * max);
-  });
-  $('trimStart').addEventListener('change', (e) => { T.start = Math.max(0, +e.target.value); syncInputs(); });
-  $('trimEnd').addEventListener('change', (e) => { T.end = Math.max(T.start + 0.02, +e.target.value); syncInputs(); });
-  document.querySelectorAll('.nudge button').forEach((b) => b.addEventListener('click', () => {
-    const k = b.dataset.t === 'start' ? 'start' : 'end';
-    T[k] = Math.max(0, +(T[k] + +b.dataset.d).toFixed(3));
-    if (T.end <= T.start) { if (k === 'start') T.end = T.start + 0.02; else T.start = Math.max(0, T.end - 0.02); }
-    syncInputs();
-    playRegion();
-  }));
-  wave.addEventListener('click', (e) => {
-    if (!T.buf) return;
-    const r = wave.getBoundingClientRect();
-    const t = T.view + ((e.clientX - r.left) / r.width) * span();
-    if (e.shiftKey) T.end = Math.max(t, T.start + 0.02); else { T.start = t; if (T.end <= t) T.end = t + 0.3; }
-    syncInputs();
-  });
-  $('trimPlay').addEventListener('click', playRegion);
-  $('trimStop').addEventListener('click', stopPreview);
-  $('trimReset').addEventListener('click', () => {
-    const d = DEFAULTS[PADS[T.i].label] || ['Stronger', 0, 1];
-    $('trimSrc').value = d[0];
-    loadTrimSource(d[0], [d[1], d[2]]);
-  });
-  $('trimSave').addEventListener('click', saveTrim);
-  $('trimClose').addEventListener('click', () => { stopPreview(); $('trim').hidden = true; });
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('trim').hidden) { stopPreview(); $('trim').hidden = true; } }, true);
-
-  // ---------- bundled clips (clips/<pad-label>.mp3), used when you haven't loaded your own ----------
+  // ---------- bundled clips (clips/<pad-label>.mp3), fixed per pad ----------
   const slug = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   async function loadBundled() {
     await Promise.all(PADS.map(async (p, i) => {
-      if (buffers[i] || p.cancel) return;
+      if (p.cancel) return;
       try {
         const r = await fetch('clips/' + slug(p.label) + '.mp3');
         if (!r.ok) return;
         buffers[i] = await decode(await r.blob());
-        setLoaded(i, 'clip');
       } catch {}
     }));
   }
@@ -568,7 +332,6 @@
     buildPads();
     draw();
     await idb.open();
-    await restorePads();
     await loadBundled();
     await selectSong(song, false);
   })();
