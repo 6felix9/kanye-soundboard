@@ -15,7 +15,7 @@
 
 * { box-sizing: border-box; }
 
-html, body { margin: 0; min-height: 100%; }
+html, body { margin: 0; min-height: 100%; background-color: var(--bg); }
 
 body {
   background:
@@ -194,9 +194,9 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 26px; border-radius: 
 .credits-tip a { color: var(--gold); }
 
 @media (max-width: 760px) {
-  body { height: auto; overflow: auto; display: block; }
-  body { padding: 8px; }
-  .console { grid-template-columns: minmax(0, 1fr); height: auto; max-height: none; gap: 12px; padding: 18px 14px; }
+  html, body { width: 100%; overflow-x: clip; overscroll-behavior: none; }
+  body { height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto; display: block; padding: 8px; }
+  .console { width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr); height: auto; max-height: none; gap: 12px; padding: 18px 14px; }
   .pads { grid-template-columns: repeat(3, 1fr); grid-template-rows: none; grid-auto-rows: 88px; gap: 8px; }
   .pad .key { display: none; }
   /* phone: header, then pads, then the deck controls */
