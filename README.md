@@ -2,6 +2,8 @@
 
 A little 30-pad sampler for messing around with sounds from Kanye West's *Runaway* and *Stronger*.
 
+**Live:** https://kanye-soundboard.vercel.app
+
 ## About this project
 
 This is just a fun personal project. It isn't commercial, nothing is sold, and it has no bad intentions. It isn't meant to infringe anyone's copyright, and it doesn't distribute any music. The full songs and instrumentals are not included in this repo.
