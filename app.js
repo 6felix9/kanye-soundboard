@@ -137,6 +137,8 @@
 
   function buildPads() {
     const grid = $('pads');
+    const maxTapDuration = 350;
+    const moveTolerance = 12;
     PADS.forEach((p, i) => {
       const pad = document.createElement('div');
       pad.className = 'pad';
@@ -147,9 +149,22 @@
       els.push({ pad });
 
       pad.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        trigger(i);
+        if (!e.isPrimary || e.button !== 0) return;
+        pad._press = { id: e.pointerId, x: e.clientX, y: e.clientY, started: performance.now(), moved: false };
+        pad.setPointerCapture(e.pointerId);
       });
+      pad.addEventListener('pointermove', (e) => {
+        const press = pad._press;
+        if (!press || press.id !== e.pointerId) return;
+        if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > moveTolerance) press.moved = true;
+      });
+      pad.addEventListener('pointerup', (e) => {
+        const press = pad._press;
+        pad._press = null;
+        if (!press || press.id !== e.pointerId || press.moved || performance.now() - press.started > maxTapDuration) return;
+        if (document.elementFromPoint(e.clientX, e.clientY)?.closest('.pad') === pad) trigger(i);
+      });
+      pad.addEventListener('pointercancel', () => { pad._press = null; });
 
       grid.appendChild(pad);
     });
