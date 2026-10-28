@@ -24,4 +24,4 @@ Double-click `start.command`, or run:
 python3 server.py
 ```
 
-Then open http://localhost:8765. Play the pads with your keyboard (`1`–`0`, `Q`–`P`, `A`–`;`) or by clicking or tapping them. Use **LOAD TRACK** to play along with your own copy of a song.
+Then open http://localhost:8765. Play the pads with your keyboard (`1`–`0`, `Q`–`P`, `A`–`;`) or by clicking or tapping them. Use the built-in Runaway and Stronger instrumentals in the deck controls.

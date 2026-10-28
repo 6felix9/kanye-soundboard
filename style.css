@@ -134,7 +134,6 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 26px; border-radius: 
 .tbtn.play { color: #fff; background: linear-gradient(180deg, #ff3b3b, #a80a12); box-shadow: 0 3px 0 #000, inset 0 1px 0 rgba(255,200,190,.35); }
 .tbtn.play.on { color: #1a0a00; background: linear-gradient(180deg, #ffd98a, #c48a24); box-shadow: 0 3px 0 #000, 0 0 16px rgba(224,178,90,.55); }
 .tbtn.toggle.on { color: var(--lcd); box-shadow: 0 3px 0 #000, 0 0 12px rgba(255,68,51,.45); }
-.tbtn.load { display: flex; align-items: center; justify-content: center; }
 .tbtn.small { padding: 8px 12px; font-size: 10px; }
 .deckvol input { width: 100%; }
 

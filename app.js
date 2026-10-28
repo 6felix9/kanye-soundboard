@@ -42,32 +42,6 @@
 
   const $ = (id) => document.getElementById(id);
 
-  // ---------- storage (IndexedDB for your loaded deck tracks) ----------
-  const idb = {
-    db: null,
-    open() {
-      return new Promise((res) => {
-        try {
-          const r = indexedDB.open('kanye-soundboard', 1);
-          r.onupgradeneeded = () => r.result.createObjectStore('files');
-          r.onsuccess = () => { idb.db = r.result; res(); };
-          r.onerror = () => res();
-        } catch { res(); }
-      });
-    },
-    tx(mode, fn) {
-      return new Promise((res) => {
-        if (!idb.db) return res(undefined);
-        const t = idb.db.transaction('files', mode);
-        const req = fn(t.objectStore('files'));
-        t.oncomplete = () => res(req && req.result);
-        t.onerror = () => res(undefined);
-      });
-    },
-    get: (k) => idb.tx('readonly', (s) => s.get(k)),
-    put: (k, v) => idb.tx('readwrite', (s) => s.put(v, k)),
-  };
-
   // ---------- audio graph ----------
   const AC = window.AudioContext || window.webkitAudioContext;
   const ctx = new AC();
@@ -208,35 +182,30 @@
     document.querySelectorAll('#songSel button').forEach((b) => b.classList.toggle('on', b.dataset.song === song));
   }
 
-  // your loaded track for this song, else the bundled clips/<song>-instrumental.mp3
+  // Load the bundled clips/<song>-instrumental.mp3 deck track.
   async function selectSong(next, keepPlaying) {
     const wasPlaying = keepPlaying && !deckEl.paused;
     song = next;
     try { localStorage.setItem('ks-song', song); } catch {}
     markSong();
     deckEl.pause();
-    let rec = await idb.get('track-' + song);
-    if (!rec && song === 'runaway') rec = await idb.get('track');
-    if (rec) loadTrack(rec.blob, rec.name);
-    else {
-      try {
-        const r = await fetch('clips/' + song + '-instrumental.mp3');
-        if (!r.ok) throw new Error('missing');
-        loadTrack(await r.blob(), SONGS[song]);
-      } catch {
-        deckEl.removeAttribute('src');
-        $('trackName').textContent = 'NO ' + song.toUpperCase() + ' INSTRUMENTAL';
-        $('seek').disabled = true;
-        $('timeTotal').textContent = '0:00';
-        return;
-      }
+    try {
+      const r = await fetch('clips/' + song + '-instrumental.mp3');
+      if (!r.ok) throw new Error('missing');
+      loadTrack(await r.blob(), SONGS[song]);
+    } catch {
+      deckEl.removeAttribute('src');
+      $('trackName').textContent = 'NO ' + song.toUpperCase() + ' INSTRUMENTAL';
+      $('seek').disabled = true;
+      $('timeTotal').textContent = '0:00';
+      return;
     }
     if (wasPlaying) { try { await deckEl.play(); } catch {} }
   }
 
   async function togglePlay() {
     resume();
-    if (!deckEl.src) { $('trackFile').click(); return; }
+    if (!deckEl.src) return;
     if (deckEl.paused) { try { await deckEl.play(); } catch {} } else deckEl.pause();
   }
 
@@ -261,23 +230,6 @@
   $('master').addEventListener('input', (e) => { master.gain.value = +e.target.value; });
   $('panic').addEventListener('click', killAll);
 
-  $('trackFile').addEventListener('change', async (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    loadTrack(f, f.name.replace(/\.[^.]+$/, ''));
-    await idb.put('track-' + song, { blob: f, name: f.name.replace(/\.[^.]+$/, '') });
-    e.target.value = '';
-  });
-
-  // drop a track anywhere to load it into the deck
-  window.addEventListener('dragover', (e) => e.preventDefault());
-  window.addEventListener('drop', async (e) => {
-    e.preventDefault();
-    const f = e.dataTransfer.files[0];
-    if (!f || !f.type.startsWith('audio')) return;
-    loadTrack(f, f.name.replace(/\.[^.]+$/, ''));
-    await idb.put('track-' + song, { blob: f, name: f.name.replace(/\.[^.]+$/, '') });
-  });
   document.querySelectorAll('#songSel button').forEach((b) => b.addEventListener('click', () => {
     if (b.dataset.song !== song) selectSong(b.dataset.song, true);
   }));
@@ -331,7 +283,6 @@
   (async () => {
     buildPads();
     draw();
-    await idb.open();
     await loadBundled();
     await selectSong(song, false);
   })();
