@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanye Soundboard</title>
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="console">
+  <i class="screw tl"></i><i class="screw tr"></i><i class="screw bl"></i><i class="screw br"></i>
+
+  <section id="pads" class="pads" aria-label="Sample pads"></section>
+
+  <aside class="side" aria-label="Controls">
+    <header class="brand">
+      <img class="brand-icon" src="img/kanye-head.png" alt="">
+      <div>
+        <h1>KANYE<span>SOUNDBOARD</span></h1>
+        <p>MODEL KW-12 &middot; 12-PAD SAMPLER</p>
+      </div>
+    </header>
+
+    <div class="meter-wrap">
+      <canvas id="meter" width="260" height="56"></canvas>
+      <label class="fader-h">MASTER
+        <input id="master" type="range" min="0" max="1" step="0.01" value="0.9">
+      </label>
+    </div>
+
+    <section class="deck" aria-label="Background track deck">
+      <div class="lcd">
+        <div class="lcd-row"><span class="lcd-tag">DECK A</span><span id="trackName" class="lcd-title">NO TRACK LOADED</span></div>
+        <div class="lcd-row big"><span id="timeNow">0:00</span><span class="sep">/</span><span id="timeTotal">0:00</span></div>
+        <input id="seek" class="seek" type="range" min="0" max="1000" value="0" step="1" disabled>
+      </div>
+      <div id="songSel" class="transport">
+        <button class="tbtn toggle" data-song="runaway" title="Runaway instrumental">RUNAWAY</button>
+        <button class="tbtn toggle" data-song="stronger" title="Stronger instrumental">STRONGER</button>
+      </div>
+      <div class="transport">
+        <button id="play" class="tbtn play" title="Play / pause (Space)">&#9654; PLAY</button>
+        <button id="stop" class="tbtn" title="Stop">&#9632; STOP</button>
+        <button id="rew" class="tbtn" title="Back 5s">&#9664;&#9664; 5s</button>
+        <button id="loop" class="tbtn toggle" title="Loop">&#8635; LOOP</button>
+      </div>
+      <label class="tbtn load" title="Load your backing track (e.g. Runaway)">
+        &#9167; LOAD TRACK
+        <input id="trackFile" type="file" accept="audio/*" hidden>
+      </label>
+      <label class="fader-h deckvol">DECK VOL
+        <input id="deckVol" type="range" min="0" max="1" step="0.01" value="0.7">
+      </label>
+    </section>
+
+    <div class="pads-head">
+      <label class="chk"><input id="tts" type="checkbox" checked><i></i> VOICE FALLBACK</label>
+      <button id="panic" class="tbtn small">&#9632; KILL ALL</button>
+    </div>
+  </aside>
+
+  <div class="credits">
+    <button class="credits-btn" type="button" aria-label="Credits" aria-describedby="creditsTip">i</button>
+    <div id="creditsTip" class="credits-tip" role="tooltip">
+      <b>CREDITS</b>
+      <p><i>Runaway</i> &mdash; Kanye West feat. Pusha T, from <i>My Beautiful Dark Twisted Fantasy</i> (2010, Roc-A-Fella / Def Jam).</p>
+      <p><i>Stronger</i> &mdash; Kanye West, from <i>Graduation</i> (2007, Roc-A-Fella / Def Jam). Samples Daft Punk&rsquo;s <i>Harder, Better, Faster, Stronger</i>.</p>
+      <p>Clips inspired by the <a href="https://runaway.haidrr.com/" target="_blank" rel="noopener">Runaway Soundboard</a> by @candhforlife.</p>
+      <p>All songs, recordings and likenesses belong to their respective owners. This is a fan-made project made purely for fun &mdash; non-commercial, and nothing here is sold or distributed.</p>
+    </div>
+  </div>
+</main>
+<div id="trim" class="modal" hidden>
+  <div class="mbox">
+    <div class="mhead"><b id="trimTitle">TRIM</b><button id="trimClose" class="tbtn small">&#10005; CLOSE</button></div>
+    <div class="mrow">
+      <label class="mlab">SOURCE <select id="trimSrc"></select></label>
+      <label class="mlab">ZOOM <select id="trimZoom"><option value="3">3s</option><option value="6" selected>6s</option><option value="12">12s</option><option value="30">30s</option></select></label>
+      <span id="trimStatus" class="mhint"></span>
+    </div>
+    <canvas id="wave" width="760" height="150"></canvas>
+    <input id="trimView" type="range" min="0" max="1000" value="0" style="width:100%">
+    <div class="mrow">
+      <div class="nudge"><span>START</span><button data-t="start" data-d="-0.05">&minus;</button><input id="trimStart" type="number" step="0.01" min="0"><button data-t="start" data-d="0.05">+</button></div>
+      <div class="nudge"><span>END</span><button data-t="end" data-d="-0.05">&minus;</button><input id="trimEnd" type="number" step="0.01" min="0"><button data-t="end" data-d="0.05">+</button></div>
+    </div>
+    <div class="mrow">
+      <button id="trimPlay" class="tbtn play">&#9654; PLAY REGION</button>
+      <button id="trimStop" class="tbtn">&#9632; STOP</button>
+      <button id="trimReset" class="tbtn">&#8634; DEFAULT</button>
+      <button id="trimSave" class="tbtn" style="margin-left:auto">&#10003; SAVE TO PAD</button>
+    </div>
+    <p class="mhint">Click the waveform to set START &middot; Shift-click to set END &middot; red = selected region</p>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

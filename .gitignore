@@ -1,0 +1,6 @@
+.DS_Store
+
+# full commercial tracks and backing instrumentals are kept local only, never committed
+Kanye West - *.mp3
+clips/*-instrumental.mp3
+clips/_replaced/
