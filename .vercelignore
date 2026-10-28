@@ -7,4 +7,5 @@ start.command
 # full commercial tracks and backing instrumentals are never uploaded
 Kanye West - *.mp3
 clips/*-instrumental.mp3
+!clips/runaway-instrumental.mp3
 clips/_replaced/
